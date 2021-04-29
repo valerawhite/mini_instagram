@@ -1,7 +1,5 @@
 <?php
-
 use Model\User_model;
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -13,7 +11,7 @@ use Model\User_model;
   <title>Test Task</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  <link rel="stylesheet" href="/css/app.css?v=<?= filemtime(FCPATH . '/css/app.css') ?>">
+  <link rel="stylesheet" href="../css/app.css?v=<?= filemtime(FCPATH . '/css/app.css') ?>">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
@@ -26,8 +24,9 @@ use Model\User_model;
       </button>
       <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
         <li class="nav-item">
+             
             <?  if (User_model::is_logged()) {?>
-              <a href="/main_page/logout" class="btn btn-primary my-2 my-sm-0"
+              <a href="../../public/index.php/main_page/logout" class="btn btn-primary my-2 my-sm-0"
                  data-target="#loginModal">Log out, <?= $user->personaname?>
               </a>
             <? } else {?>
@@ -44,23 +43,23 @@ use Model\User_model;
             <? }?>
         </li>
       </div>
-<!--      <div class="collapse navbar-collapse" id="navbarTogglerDemo01">-->
-<!--        <li class="nav-item">-->
-<!--            --><?// if (User_model::is_logged()) {?>
-<!--              <button type="button" class="btn btn-primary my-2 my-sm-0" type="submit" data-toggle="modal"-->
-<!--                      data-target="#loginModal">Log in-->
-<!--              </button>-->
-<!--            --><?// } else {?>
-<!--              <button type="button" class="btn btn-danger my-2 my-sm-0" href="/logout">Log out-->
-<!--              </button>-->
-<!--            --><?// } ?>
-<!--        </li>-->
-<!--        <li class="nav-item">-->
-<!--          <button type="button" class="btn btn-success my-2 my-sm-0" type="submit" data-toggle="modal"-->
-<!--                  data-target="#addModal">Add balance-->
-<!--          </button>-->
-<!--        </li>-->
-<!--      </div>-->
+     <!-- <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+        <li class="nav-item">
+            <?if (User_model::is_logged()) {?>
+              <button type="button" class="btn btn-primary my-2 my-sm-0" type="submit" data-toggle="modal"
+                      data-target="#loginModal">Log in
+              </button>
+            <? } else {?>
+              <button type="button" class="btn btn-danger my-2 my-sm-0" href="/logout">Log out
+              </button>
+            <? } ?>
+       </li>
+        <li class="nav-item">
+          <button type="button" class="btn btn-success my-2 my-sm-0" type="submit" data-toggle="modal"
+                  data-target="#addModal">Add balance
+          </button>
+        </li>
+      </div> -->
     </nav>
   </div>
   <div class="main">
@@ -70,7 +69,7 @@ use Model\User_model;
         <div class="row">
           <div class="col-4" v-for="post in posts" v-if="posts">
             <div class="card">
-              <img :src="post.img + '?v=<?= filemtime(FCPATH . '/js/app.js') ?>'" class="card-img-top" alt="Photo">
+              <img :src="post.img + '?v=<?= filemtime(FCPATH . 'js/app.js') ?>'" class="card-img-top" alt="Photo">
               <div class="card-body">
                 <h5 class="card-title">Post - {{post.id}}</h5>
                 <p class="card-text">{{post.text}}</p>
@@ -88,7 +87,7 @@ use Model\User_model;
           <div class="row">
             <div class="col-4" v-for="box in packs" v-if="packs">
               <div class="card">
-                <img :src="'/images/box.png' + '?v=<?= filemtime(FCPATH . '/js/app.js') ?>'" class="card-img-top" alt="Photo">
+                <img :src="'../images/box.png' + '?v=<?= filemtime(FCPATH . 'js/app.js') ?>'" class="card-img-top" alt="Photo">
                 <div class="card-body">
                   <button type="button" class="btn btn-outline-success my-2 my-sm-0" @click="buyPack(box.id)">Buy boosterpack {{box.price}}$
                   </button>
@@ -182,12 +181,13 @@ use Model\User_model;
                   <span>{{likes}}</span>
                 </div>
               </div>
-              <p class="card-text" v-for="comment in post.coments"> {{comment.user.personaname + ' - '}}<small class="text-muted">{{comment.text}}</small></p>
+              <p class="card-text" v-for="comment in post.coments"> {{comment.user.personaname + ' - '}}<small class="text-muted">{{comment.text}}</small> <span v-if="comment.to_user_answer">ответ пользователю: {{comment.to_user_answer.personaname}}</span></p>
+              
               <form class="form-inline">
                 <div class="form-group">
                   <input type="text" class="form-control" id="addComment" v-model="commentText">
                 </div>
-                <button type="submit" class="btn btn-primary">Add comment</button>
+                <button type="button" class="btn btn-primary" @click="addcomment(post.id, '<?=App::get_ci()->session->userdata('scrf');?>')">Add comment</button>
               </form>
             </div>
           </div>
@@ -221,7 +221,7 @@ use Model\User_model;
           </form>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" @click="fiilIn">Add</button>
+          <button type="submit" class="btn btn-success" @click="fiilIn('<?=App::get_ci()->session->userdata('scrf');?>')">Add</button>
         </div>
       </div>
     </div>
@@ -257,7 +257,7 @@ use Model\User_model;
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
-<script src="/js/app.js?v=<?= filemtime(FCPATH . '/js/app.js') ?>"></script>
+<script src="../js/app.js?v=<?= filemtime(FCPATH . '/js/app.js') ?>"></script>
 </body>
 </html>
 

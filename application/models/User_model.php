@@ -39,7 +39,8 @@ class User_model extends CI_Emerald_Model {
     protected $time_created;
     /** @var string */
     protected $time_updated;
-
+    /** @var int */
+    protected $wallet_total_likes;
 
     private static $_current_user;
 
@@ -145,7 +146,6 @@ class User_model extends CI_Emerald_Model {
     {
         return $this->wallet_balance;
     }
-
     /**
      * @param float $wallet_balance
      *
@@ -155,6 +155,25 @@ class User_model extends CI_Emerald_Model {
     {
         $this->wallet_balance = $wallet_balance;
         return $this->save('wallet_balance', $wallet_balance);
+    }
+
+    /**
+     * @return int
+     */
+    public function get_wallet_total_likes(): int
+    {
+        return $this->wallet_total_likes;
+    }
+
+    /**
+     * @param float $wallet_balance
+     *
+     * @return bool
+     */
+    public function set_wallet_total_likes(int $wallet_total_likes)
+    {
+        $this->wallet_total_likes = $wallet_total_likes;
+        return $this->save('wallet_total_likes', $wallet_total_likes);
     }
 
     /**
@@ -253,6 +272,11 @@ class User_model extends CI_Emerald_Model {
         return new static(App::get_ci()->s->get_insert_id());
     }
 
+    public function update(array $data)
+    {
+        App::get_ci()->s->from(self::CLASS_TABLE)->where(['id' => $this->get_id()])->update($data)->execute();
+        return (App::get_ci()->s->get_affected_rows() > 0);
+    }
     public function delete()
     {
         $this->is_loaded(TRUE);
@@ -316,7 +340,36 @@ class User_model extends CI_Emerald_Model {
         }
     }
 
+    public static function get_user_id($login, $pass) {
+         $data = App::get_ci()->s->from(self::CLASS_TABLE)->where(['email' => $login, 'password' => $pass])->one();
+        
+        if(count($data) > 0) {
+            return $data['id'];
+        } else {
+            return FALSE;
+        }
+    }
 
+    public function preparetion_balance_for_update($sum, $action = FALSE, $likes = NULL) {
+        $current_balance = $this->get_wallet_balance();
+        $current_total_balance = $this->get_wallet_total_refilled();
+        $current_total_withdrawn = $this->get_wallet_total_withdrawn();
+        $current_total_likes = $this->get_wallet_total_likes();
+        try {
+        if($action) {
+            $current_balance += $sum;
+            $current_total_balance += $sum;
+            $this->update(['wallet_balance' => $current_balance, 'wallet_total_refilled' => $current_total_balance]);
+        } else {
+            $current_balance = $current_balance - $sum;
+            $current_total_withdrawn += $sum;
+            $current_total_likes += $likes;
+            $this->update(['wallet_balance' => $current_balance, 'wallet_total_withdrawn' => $current_total_withdrawn, 'wallet_total_likes' => $current_total_likes]);
+        }
+        } catch(Exception $ex) {
+            throw new Exception('error updated');
+        }
+    }
 
     /**
      * @param User_model|User_model[] $data

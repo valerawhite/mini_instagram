@@ -3,7 +3,7 @@
 namespace Model;
 use App;
 use CI_Emerald_Model;
-use Comment_model;
+//use Comment_model;
 use Exception;
 use stdClass;
 
@@ -195,6 +195,12 @@ class Post_model extends CI_Emerald_Model {
         return new static(App::get_ci()->s->get_insert_id());
     }
 
+    public function update(array $data)
+    {
+        App::get_ci()->s->from(self::CLASS_TABLE)->where(['id' => $this->get_id()])->update($data)->execute();
+        return (App::get_ci()->s->get_affected_rows() > 0);
+    }
+
     public function delete()
     {
         $this->is_loaded(TRUE);
@@ -202,8 +208,14 @@ class Post_model extends CI_Emerald_Model {
         return (App::get_ci()->s->get_affected_rows() > 0);
     }
 
-    public function comment(){
-
+    public function comment($post_id, $message){
+        $data = [
+            'user_id' => $this->get_user_id(),
+            'assign_id' => $post_id,
+            'text' => $message,
+        ];
+        App::get_ci()->s->from(Comment_model::CLASS_TABLE)->insert($data)->execute();
+        return $this;
     }
 
     /**
@@ -289,7 +301,7 @@ class Post_model extends CI_Emerald_Model {
         $o->user = User_model::preparation($data->get_user(), 'main_page');
         $o->coments = Comment_model::preparation($data->get_comments(), 'full_info');
 
-        $o->likes = rand(0, 25);
+        $o->likes = $data->get_likes();
 
 
         $o->time_created = $data->get_time_created();

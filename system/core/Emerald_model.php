@@ -151,6 +151,7 @@ class CI_Emerald_Model {
     {
         if ($hard)
         {
+        
             if (empty($this->data) || $this->id == NULL)
             {
                 throw new EmeraldModelLoadException('Object not loaded!');

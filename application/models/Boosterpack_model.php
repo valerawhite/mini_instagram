@@ -114,10 +114,36 @@ class Boosterpack_model extends CI_Emerald_Model {
         return $this;
     }
 
+    public function get_random_likes($price, $user) {
+        $bank = $this->get_bank();
+        $likes = rand(1, $price + $bank);
+        $this->change_bank_balance($bank,$price, $likes);
+        $user->preparetion_balance_for_update($price, false, $likes);
+
+       return $likes;
+    }
+
     public static function create(array $data)
     {
         App::get_ci()->s->from(self::CLASS_TABLE)->insert($data)->execute();
         return new static(App::get_ci()->s->get_insert_id());
+    }
+
+    public function change_bank_balance($bank, $price, $likes) {
+        $bank = $bank + ($price - $likes);
+        
+        try {
+            $this->update(['bank' => $bank]);
+        } catch(Exception $ex) {
+          $ex->getMessage();
+        }
+    }
+
+
+    public function update(array $data)
+    {
+        App::get_ci()->s->from(self::CLASS_TABLE)->where(['id' => $this->get_id()])->update($data)->execute();
+        return (App::get_ci()->s->get_affected_rows() > 0);
     }
 
     public function delete()

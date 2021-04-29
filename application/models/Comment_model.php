@@ -6,7 +6,9 @@
  * Date: 27.01.2020
  * Time: 10:10
  */
-class Comment_model extends CI_Emerald_Model
+ namespace Model;
+ 
+class Comment_model extends \CI_Emerald_Model
 {
     const CLASS_TABLE = 'comment';
 
@@ -15,6 +17,8 @@ class Comment_model extends CI_Emerald_Model
     protected $user_id;
     /** @var int */
     protected $assing_id;
+    /** @var int */
+    protected $to_user_id;
     /** @var string */
     protected $text;
 
@@ -27,6 +31,7 @@ class Comment_model extends CI_Emerald_Model
     protected $comments;
     protected $likes;
     protected $user;
+    protected $to_user;
 
 
     /**
@@ -35,6 +40,14 @@ class Comment_model extends CI_Emerald_Model
     public function get_user_id(): int
     {
         return $this->user_id;
+    }
+
+    /**
+     * @return int
+     */
+    public function get_to_user_id()
+    {
+        return $this->to_user_id;
     }
 
     /**
@@ -48,6 +61,17 @@ class Comment_model extends CI_Emerald_Model
         return $this->save('user_id', $user_id);
     }
 
+
+    /**
+     * @param int $user_id
+     *
+     * @return bool
+     */
+    public function set_to_user_id(int $to_user_id)
+    {
+        $this->to_user_id = $to_user_id;
+        return $this->save('to_user_id', $to_user_id);
+    }
     /**
      * @return int
      */
@@ -160,6 +184,22 @@ class Comment_model extends CI_Emerald_Model
         }
         return $this->user;
     }
+    /**
+     * @return User_model
+     */
+    public function get_to_user():User_model
+    {
+        if (empty($this->to_user))
+        {
+            try {
+                $this->to_user = new User_model($this->get_to_user_id());
+            } catch (Exception $exception)
+            {
+                $this->to_user = new User_model();
+            }
+        }
+        return $this->to_user;
+    }
 
     function __construct($id = NULL)
     {
@@ -176,15 +216,15 @@ class Comment_model extends CI_Emerald_Model
 
     public static function create(array $data)
     {
-        App::get_ci()->s->from(self::CLASS_TABLE)->insert($data)->execute();
-        return new static(App::get_ci()->s->get_insert_id());
+        \App::get_ci()->s->from(self::CLASS_TABLE)->insert($data)->execute();
+        return new static(\App::get_ci()->s->get_insert_id());
     }
 
     public function delete()
     {
         $this->is_loaded(TRUE);
-        App::get_ci()->s->from(self::CLASS_TABLE)->where(['id' => $this->get_id()])->delete()->execute();
-        return (App::get_ci()->s->get_affected_rows() > 0);
+        \App::get_ci()->s->from(self::CLASS_TABLE)->where(['id' => $this->get_id()])->delete()->execute();
+        return (\App::get_ci()->s->get_affected_rows() > 0);
     }
 
     /**
@@ -195,7 +235,7 @@ class Comment_model extends CI_Emerald_Model
     public static function get_all_by_assign_id(int $assting_id)
     {
 
-        $data = App::get_ci()->s->from(self::CLASS_TABLE)->where(['assign_id' => $assting_id])->orderBy('time_created','ASC')->many();
+        $data = \App::get_ci()->s->from(self::CLASS_TABLE)->where(['assign_id' => $assting_id])->orderBy('time_created','ASC')->many();
         $ret = [];
         foreach ($data as $i)
         {
@@ -231,12 +271,16 @@ class Comment_model extends CI_Emerald_Model
         $ret = [];
 
         foreach ($data as $d){
-            $o = new stdClass();
+            $o = new \stdClass();
 
             $o->id = $d->get_id();
             $o->text = $d->get_text();
 
             $o->user = User_model::preparation($d->get_user(),'main_page');
+            if($d->get_to_user()->id != null)
+                $o->to_user_answer = User_model::preparation($d->get_to_user(),'main_page');
+            else 
+                $o->to_user_answer = null;
 
             $o->likes = rand(0, 25);
 
