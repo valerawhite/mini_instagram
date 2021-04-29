@@ -7,6 +7,7 @@ var app = new Vue({
 		invalidLogin: false,
 		invalidPass: false,
 		invalidSum: false,
+		invalidText: false,
 		posts: [],
 		addSum: 0,
 		amount: 0,
@@ -36,7 +37,7 @@ var app = new Vue({
 	created(){
 		var self = this
 		axios
-			.get('/main_page/get_all_posts')
+			.get('../index.php/main_page/get_all_posts')
 			.then(function (response) {
 				self.posts = response.data.posts;
 			})
@@ -57,7 +58,7 @@ var app = new Vue({
 			else{
 				self.invalidLogin = false
 				self.invalidPass = false
-				axios.post('/main_page/login', {
+				axios.post('../index.php/main_page/login', {
 					login: self.login,
 					password: self.pass
 				})
@@ -68,15 +69,18 @@ var app = new Vue({
 					})
 			}
 		},
-		fiilIn: function () {
+		fiilIn: function (scrf) {
 			var self= this;
 			if(self.addSum === 0){
 				self.invalidSum = true
 			}
+			
 			else{
+				console.log(scrf);
 				self.invalidSum = false
-				axios.post('/main_page/add_money', {
+				axios.post('../index.php/main_page/add_money', {
 					sum: self.addSum,
+					scrf: scrf,
 				})
 					.then(function (response) {
 						setTimeout(function () {
@@ -85,10 +89,30 @@ var app = new Vue({
 					})
 			}
 		},
+		addcomment: function(id, scrf) {
+			var self = this;
+			console.log(id);
+			if(self.commentText === '') {
+				self.invalidText = true
+			}
+			else {
+				self.invalidText = false
+				axios.post('../index.php/main_page/comment', {
+					text: self.commentText,
+					post_id: id,
+					scrf: scrf,
+				})
+				.then(function (response) {
+					setTimeout(function () {
+						$('#postModal').modal('hide');
+					}, 500);
+				})
+			}
+		},
 		openPost: function (id) {
 			var self= this;
 			axios
-				.get('/main_page/get_post/' + id)
+				.get('../index.php/main_page/get_post/' + id)
 				.then(function (response) {
 					self.post = response.data.post;
 					if(self.post){
@@ -101,15 +125,17 @@ var app = new Vue({
 		addLike: function (id) {
 			var self= this;
 			axios
-				.get('/main_page/like')
+				.get('../index.php/main_page/like?post_id='+ id)
 				.then(function (response) {
-					self.likes = response.data.likes;
+					if( response.data.likes > 0) {
+						self.likes = response.data.likes;
+					}
 				})
 
 		},
 		buyPack: function (id) {
 			var self= this;
-			axios.post('/main_page/buy_boosterpack', {
+			axios.post('../index.php/main_page/buy_boosterpack', {
 				id: id,
 			})
 				.then(function (response) {
