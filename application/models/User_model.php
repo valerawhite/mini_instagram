@@ -350,25 +350,34 @@ class User_model extends CI_Emerald_Model {
         }
     }
 
-    public function preparetion_balance_for_update($sum, $action = FALSE, $likes = NULL) {
+    public function preparetion_balance_for_update(User_model $user, float $sum, bool $action = FALSE, int $likes = NULL, $info = NULL) {
+        if($sum <= 0) throw new Exception('error of amount');
+
+        App::get_ci()->s->start_trans();
         $current_balance = $this->get_wallet_balance();
         $current_total_balance = $this->get_wallet_total_refilled();
         $current_total_withdrawn = $this->get_wallet_total_withdrawn();
         $current_total_likes = $this->get_wallet_total_likes();
         try {
-        if($action) {
-            $current_balance += $sum;
-            $current_total_balance += $sum;
-            $this->update(['wallet_balance' => $current_balance, 'wallet_total_refilled' => $current_total_balance]);
-        } else {
-            $current_balance = $current_balance - $sum;
-            $current_total_withdrawn += $sum;
-            $current_total_likes += $likes;
-            $this->update(['wallet_balance' => $current_balance, 'wallet_total_withdrawn' => $current_total_withdrawn, 'wallet_total_likes' => $current_total_likes]);
-        }
+            if($action) {
+                $current_balance += $sum;
+                $current_total_balance += $sum;
+                $this->update(['wallet_balance' => $current_balance, 'wallet_total_refilled' => $current_total_balance]);
+                Transaction_model::startTransaction($user, $sum, Transaction_type::ADDING);
+            } else {
+                $current_balance = $current_balance - $sum;
+                $current_total_withdrawn += $sum;
+                $current_total_likes += $likes;
+                $this->update(['wallet_balance' => $current_balance, 'wallet_total_withdrawn' => $current_total_withdrawn, 'wallet_total_likes' => $current_total_likes]);
+                Transaction_model::startTransaction($user, $sum, Transaction_type::WITHDRAWN, $info, $likes);
+            }
+            
         } catch(Exception $ex) {
+            App::get_ci()->s->rollback();
             throw new Exception('error updated');
         }
+        App::get_ci()->s->commit();
+        return $current_balance;
     }
 
     /**

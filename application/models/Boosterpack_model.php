@@ -114,11 +114,12 @@ class Boosterpack_model extends CI_Emerald_Model {
         return $this;
     }
 
-    public function get_random_likes($price, $user) {
+    public function get_random_likes($price, $user, $id_package) {
         $bank = $this->get_bank();
         $likes = rand(1, $price + $bank);
         $this->change_bank_balance($bank,$price, $likes);
-        $user->preparetion_balance_for_update($price, false, $likes);
+        $info = Transaction_info::getPurchaseBoosterpack($id_package);
+        $user->preparetion_balance_for_update($user, $price, false, $likes, $info);
 
        return $likes;
     }
