@@ -4,6 +4,9 @@ use Model\Login_model;
 use Model\Post_model;
 use Model\User_model;
 use Model\Boosterpack_model;
+use Model\Transaction_model;
+use Model\Transaction_info;
+use Model\Transaction_type;
 /**
  * Created by PhpStorm.
  * User: mr.incognito
@@ -78,6 +81,7 @@ class Main_page extends MY_Controller
         try
         {
             $post = new Post_model($post_id);
+            $post->set_user_id(User_model::get_session_id());
         } catch (EmeraldModelNoDataException $ex){
             return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
         }
@@ -123,7 +127,7 @@ class Main_page extends MY_Controller
     {
     
         Login_model::logout();
-        redirect(site_url('/'));
+        redirect('http://localhost/backend_fullstack_task/public/main_page/');
     }
 
     public function add_money(){
@@ -142,16 +146,11 @@ class Main_page extends MY_Controller
        
         try {
           $user = new User_model(User_model::get_session_id());
-          $user->preparetion_balance_for_update($sum, true);
-            try {
-                $user->update(['wallet_balance'=> $current_balance, ' wallet_total_refilled' => $current_total_balance]);
-            } catch(Exception $ex) {
-                return $this->response_error('error of transuction update');
-            }
-          
+          $current_balance = $user->preparetion_balance_for_update($user, $sum, true);
         } catch(EmeraldModelNoDataException $ex) {
-            return $this->response_error(CI_Core::RESPONSE_GENERIC_NO_DATA);
+            return $this->response_error('error of transuction');
         }
+        
         return $this->response_success(['amount' => $current_balance]);
     }
 
@@ -176,7 +175,7 @@ class Main_page extends MY_Controller
         } else {
             return $this->response_error('not found id package');
         }
-        return $this->response_success(['amount' => $boost->get_random_likes($busterpacs[$data->id], $user)]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
+        return $this->response_success(['amount' => $boost->get_random_likes($busterpacs[$data->id], $user, $data->id)]); // Колво лайков под постом \ комментарием чтобы обновить . Сейчас рандомная заглушка
     }
 
 
